@@ -7,17 +7,16 @@ import androidx.lifecycle.ViewModelProvider;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
+import com.facebook.FacebookSdk;
 import com.facebook.Profile;
 import com.facebook.ProfileTracker;
 import com.facebook.login.LoginManager;
@@ -51,8 +50,6 @@ public class LoginActivity extends AppCompatActivity {
     private static final String     EMAIL = "email";
     private GoogleSignInClient      googleSignInClient;
     private CallbackManager         callbackManager;
-    private ProfileTracker          profileTracker;
-    private LoginManager            loginManager;
     private String                  fcmToken = "";
 
     @Override
@@ -68,13 +65,6 @@ public class LoginActivity extends AppCompatActivity {
         getFcmToken();
         configureGoogleSignIn();
         configureFacebookSignIn();
-
-        profileTracker = new ProfileTracker() {
-            @Override
-            protected void onCurrentProfileChanged(Profile oldProfile, Profile currentProfile) {
-                Utils.log(currentProfile.getFirstName() + " " + currentProfile.getLastName());
-            }
-        };
 
         autoLogin();
     }
@@ -118,6 +108,7 @@ public class LoginActivity extends AppCompatActivity {
     private void configureFacebookSignIn() {
         btnFacebook.setReadPermissions(Arrays.asList(EMAIL));
         callbackManager = CallbackManager.Factory.create();
+        LoginManager.getInstance().logOut();
         LoginManager.getInstance().registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
             @Override
             public void onSuccess(LoginResult loginResult) {
@@ -153,7 +144,7 @@ public class LoginActivity extends AppCompatActivity {
                 Utils.saveCredentials(this, etEmail.getText().toString(), etPassword.getText().toString());
                 viewModel.updateFcmToken();
                 if (loginResult.getUser().getRole().equals("Merchant")) {
-                    viewModel.getMerchantItems(loginResult.getUser().getId());
+                    viewModel.refreshInventory(loginResult.getUser().getId());
                     startActivity(new Intent(this, InventoryActivity.class));
                 } else {
                     startActivity(new Intent(this, QrScanActivity.class));
@@ -169,7 +160,7 @@ public class LoginActivity extends AppCompatActivity {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        callbackManager.onActivityResult(requestCode, resultCode, data);
+        callbackManager.onActivityResult(requestCode, -1, data);
         Utils.log("Code: " + resultCode);
 
         // Result returned from launching the Intent from GoogleSignInClient.getSignInIntent(...);
@@ -177,22 +168,52 @@ public class LoginActivity extends AppCompatActivity {
             // The Task returned from this call is always completed, no need to attach
             // a listener.
             Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
-            handleSignInResult(task);
+            handleGoogleSignInResult(task);
         }
     }
 
-    private void handleSignInResult(Task<GoogleSignInAccount> completedTask) {
+    private void handleGoogleSignInResult(Task<GoogleSignInAccount> completedTask) {
         try {
             GoogleSignInAccount account = completedTask.getResult(ApiException.class);
 
             // Signed in successfully, show authenticated UI.
-            Utils.showToast(this, "Welcome: " + account.getDisplayName() + " " + account.getEmail());
-
+            //Utils.showToast(this, "Welcome: " + account.getDisplayName() + " " + account.getEmail());
+            String password = "";
+            if (account.getDisplayName() != null) {
+                password = Utils.getSha512(account.getGivenName() + account.getFamilyName());
+            }
+            progressBar.setVisibility(View.VISIBLE);
+            loginWithGoogleOrFacebook(account.getEmail(), password, account.getGivenName(), account.getFamilyName());
         } catch (ApiException e) {
             // The ApiException status code indicates the detailed failure reason.
             // Please refer to the GoogleSignInStatusCodes class reference for more information.
             Utils.log("signInResult:failed code=" + e.getStatusCode());
         }
+    }
+
+    private void loginWithGoogleOrFacebook( String email, String password, String firstName, String lastName) {
+        viewModel.login(email, password).observe(this, loginResult -> {
+            progressBar.setVisibility(View.GONE);
+            if (Utils.isHttpCallSuccessful(loginResult.getCode())) {
+                Utils.log("Google fb login: " + loginResult.getCode());
+                Utils.saveCredentials(this, email, password);
+                viewModel.updateFcmToken();
+                if (loginResult.getUser().getRole().equals("Merchant")) {
+                    viewModel.refreshInventory(loginResult.getUser().getId());
+                    startActivity(new Intent(this, InventoryActivity.class));
+                } else {
+                    startActivity(new Intent(this, QrScanActivity.class));
+                }
+                finish();
+            } else {
+                Intent intent = new Intent(this, RegisterActivity.class);
+                intent.putExtra("email", email);
+                intent.putExtra("password", password);
+                intent.putExtra("firstName", firstName);
+                intent.putExtra("lastName", lastName);
+                startActivity(intent);
+            }
+        });
     }
 
     private void setListeners() {
@@ -217,6 +238,7 @@ public class LoginActivity extends AppCompatActivity {
         btnFacebook = findViewById(R.id.btn_facebook_login);
         btnGoogle = findViewById(R.id.btn_google_login);
 
+        btnFacebook.setVisibility(View.GONE);
         btnGoogle.setSize(SignInButton.SIZE_WIDE);
     }
 }

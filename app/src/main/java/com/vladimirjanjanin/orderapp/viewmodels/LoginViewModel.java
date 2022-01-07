@@ -23,7 +23,7 @@ public class LoginViewModel extends AndroidViewModel {
         return repo.login(email, password);
     }
 
-    public void getMerchantItems(String merchantId) {
+    public void refreshInventory(String merchantId) {
         repo.refreshInventory(merchantId);
     }
 

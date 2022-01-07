@@ -40,6 +40,10 @@ public class RegisterActivity extends AppCompatActivity {
     private ImageButton                 btnBack;
     private boolean                     isCustomerChosen = false;
     private boolean                     isMerchantChosen = false;
+    private String                      email = "";
+    private String                      password = "";
+    private String                      firstName = "";
+    private String                      lastName = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,7 +53,21 @@ public class RegisterActivity extends AppCompatActivity {
         viewModel = new ViewModelProvider(this).get(LoginViewModel.class);
 
         initViews();
+        getValuesFromIntent();
         setListeners();
+    }
+
+    private void getValuesFromIntent() {
+        email = getIntent().getStringExtra("email");
+        password = getIntent().getStringExtra("password");
+        firstName = getIntent().getStringExtra("firstName");
+        lastName = getIntent().getStringExtra("lastName");
+
+        etEmail.setText(email);
+        etPassword.setText(password);
+        etConfirmPassword.setText(password);
+        etFirstName.setText(firstName);
+        etLastName.setText(lastName);
     }
 
     private void setListeners() {
@@ -77,24 +95,35 @@ public class RegisterActivity extends AppCompatActivity {
         String phoneNumber = etPhoneNumber.getText().toString();
         String plus = "+";
         String processedPhoneNumber = "";
-
-        String countryCode = "+" + Utils.getCountryDialCode(this);
+        boolean validNumber = true;
 
         //if (!(phoneNumber.charAt(0) == plus.charAt(0))) processedPhoneNumber = "+" + countryCodeValue + phoneNumber;
         if (!(phoneNumber.charAt(0) == plus.charAt(0))) {
+            String countryDialCode = Utils.getCountryDialCode(this);
+            if (countryDialCode == null) {
+                progressBar.setVisibility(View.INVISIBLE);
+                Utils.showToast(this, "Please enter phone number with valid country code starting with +");
+                validNumber = false;
+            }
+            String countryCode = "+" + countryDialCode;
             processedPhoneNumber = countryCode + phoneNumber;
+        } else {
+            processedPhoneNumber = phoneNumber;
         }
+
         Utils.log(processedPhoneNumber);
         String finalProcessedPhoneNumber = processedPhoneNumber;
-        viewModel.verifyPhoneNumber(processedPhoneNumber).observe(this, v -> {
-            Utils.log(String.valueOf(v));
-            progressBar.setVisibility(View.INVISIBLE);
-            if (v >= 200 && v < 300) {
-                startActivityForResult(new Intent(this, PhoneVerificationActivity.class).putExtra("phoneNumber", finalProcessedPhoneNumber), AC_PHONE);
-            } else {
-                Utils.showToast(this, "Error!");
-            }
-        });
+        if (validNumber) {
+            viewModel.verifyPhoneNumber(processedPhoneNumber).observe(this, v -> {
+                Utils.log(String.valueOf(v));
+                progressBar.setVisibility(View.INVISIBLE);
+                if (v >= 200 && v < 300) {
+                    startActivityForResult(new Intent(this, PhoneVerificationActivity.class).putExtra("phoneNumber", finalProcessedPhoneNumber), AC_PHONE);
+                } else {
+                    Utils.showToast(this, "Error!");
+                }
+            });
+        }
     }
 
     @Override
@@ -120,11 +149,11 @@ public class RegisterActivity extends AppCompatActivity {
     private void processRegisterResponse(RegisterResponse response) {
         progressBar.setVisibility(View.GONE);
         if (!(response.getCode() >= 200 && response.getCode() < 300)) {
-            Utils.log("Error");
-            Utils.showToast(this, getString(R.string.oops_something_went_wrong));
-        } else {
             clearEditTexts();
             Utils.showSnackbar(root, this, true, "Successful registration!");
+        } else {
+            Utils.log("Error");
+            Utils.showToast(this, getString(R.string.oops_something_went_wrong));
             //startActivity(new Intent(this, QrScanActivity.class).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK));
         }
     }
