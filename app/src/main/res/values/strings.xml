@@ -52,6 +52,7 @@
     <string name="success">Success!</string>
     <string name="code">Code</string>
     <string name="verify">VERIFY</string>
+    <string name="update_quantity">Update quantity</string>
 
     <string-array name="DialingCountryCode" >
         <item>32,BE</item>

@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.vladimirjanjanin.orderapp.R;
 import com.vladimirjanjanin.orderapp.data.models.MerchantItem;
+import com.vladimirjanjanin.orderapp.utils.Utils;
 
 import java.util.List;
 
@@ -19,8 +20,8 @@ public class ShoppingCartAdapter extends RecyclerView.Adapter<ShoppingCartAdapte
     List<MerchantItem> items;
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        private TextView tvItemName;
-        private TextView tvQuantity;
+        private final TextView tvItemName;
+        private final TextView tvQuantity;
 
         public ViewHolder(View view) {
             super(view);
@@ -46,6 +47,7 @@ public class ShoppingCartAdapter extends RecyclerView.Adapter<ShoppingCartAdapte
     public void onBindViewHolder(ViewHolder viewHolder, final int position) {
         viewHolder.tvItemName.setText(items.get(position).getInventoryItem().getName());
         viewHolder.tvQuantity.setText(String.valueOf(items.get(position).getOrderQuantity()));
+        Utils.log("Order quantity: " + items.get(position).getOrderQuantity());
     }
 
     @Override

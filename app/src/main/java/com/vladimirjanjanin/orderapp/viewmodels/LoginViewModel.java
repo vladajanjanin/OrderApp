@@ -6,14 +6,10 @@ import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 
-import com.google.gson.JsonObject;
 import com.vladimirjanjanin.orderapp.data.Repository;
 import com.vladimirjanjanin.orderapp.data.dtos.RegisterBody;
 import com.vladimirjanjanin.orderapp.data.dtos.RegisterResponse;
 import com.vladimirjanjanin.orderapp.data.models.LoginInfo;
-import com.vladimirjanjanin.orderapp.data.models.User;
-
-import okhttp3.ResponseBody;
 
 public class LoginViewModel extends AndroidViewModel {
     private Repository repo;
@@ -28,7 +24,7 @@ public class LoginViewModel extends AndroidViewModel {
     }
 
     public void getMerchantItems(String merchantId) {
-        repo.getMerchantItems(merchantId);
+        repo.refreshInventory(merchantId);
     }
 
     public LiveData<RegisterResponse> register(String email, String password, String role, String firstName, String lastName, String phoneNumber) {

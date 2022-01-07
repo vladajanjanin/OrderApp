@@ -13,6 +13,9 @@ import com.vladimirjanjanin.orderapp.data.dtos.OzowTransactionResponse;
 import com.vladimirjanjanin.orderapp.data.dtos.RegisterBody;
 import com.vladimirjanjanin.orderapp.data.dtos.RegisterResponse;
 import com.vladimirjanjanin.orderapp.data.models.Identity;
+import com.vladimirjanjanin.orderapp.data.models.MerchantOrderBody;
+import com.vladimirjanjanin.orderapp.data.models.Order;
+import com.vladimirjanjanin.orderapp.data.models.OrderItem;
 import com.vladimirjanjanin.orderapp.data.models.OzowPaymentRequestResponse;
 import com.vladimirjanjanin.orderapp.data.models.OzowTransaction;
 import com.vladimirjanjanin.orderapp.data.models.Sms;
@@ -37,6 +40,9 @@ import com.vladimirjanjanin.orderapp.data.network.backend.RetrofitClientBackend;
 
 import org.json.JSONObject;
 
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import okhttp3.MediaType;
@@ -88,10 +94,10 @@ public class Repository {
             public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
                 if (response.isSuccessful()) {
                     loginInfo.setCode(response.code());
-
                     if (response.body() != null) {
                         loginInfo.setUser(response.body().getFlattenUser());
-                        Utils.log(loginInfo.getUser().getRole());
+                        Utils.log("ID:" + loginInfo.getUser().getId());
+                        Utils.log("Logged in role: " + loginInfo.getUser().getRole());
                     }
                     loginInfo.setToken(response.body().getToken());
 
@@ -133,11 +139,12 @@ public class Repository {
         this.checkoutItemsLiveData.setValue(checkoutItems);
     }
 
-    public void getMerchantItems(String merchantId) {
+    public void refreshInventory(String merchantId) {
         Call<List<MerchantItem>> call = backendApi.getMerchantItems(createAuthToken(), merchantId);
         call.enqueue(new Callback<List<MerchantItem>>() {
             @Override
             public void onResponse(Call<List<MerchantItem>> call, Response<List<MerchantItem>> response) {
+                Utils.log("Fetching items: " + response.code());
                 if (response.isSuccessful()) {
                     inventoryLiveData.postValue(response.body());
                 } else {
@@ -152,6 +159,7 @@ public class Repository {
     }
 
     private String createAuthToken() {
+        Utils.log("Token: " + loginInfo.getToken());
         return "Bearer " + loginInfo.getToken();
     }
 
@@ -270,12 +278,15 @@ public class Repository {
         return currentMerchantId;
     }
 
-    public void sendSuccessfulTransaction(MerchantTransactionBody body) {
+    public LiveData<Integer> sendSuccessfulTransaction(MerchantTransactionBody body) {
 
+        MutableLiveData<Integer> responseLiveData = new MutableLiveData<>();
+        Utils.log("Body: " + body.getMerchantId() + " " + body.getTotalPrice() + " " + body.getTransactionItems().get(0).getPrice());
         Call<ResponseBody> call = backendApi.executeMerchantTransaction(createAuthToken(), body);
         call.enqueue(new Callback<ResponseBody> () {
             @Override
             public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                responseLiveData.postValue(response.code());
                 Utils.log("Code: " + response.code());
             }
 
@@ -284,7 +295,7 @@ public class Repository {
                 Utils.log(t.getMessage());
             }
         });
-
+        return responseLiveData;
     }
 
     public void updateFcmToken() {
@@ -366,5 +377,49 @@ public class Repository {
         });
 
         return responseLiveData;
+    }
+
+    public LiveData<Integer> updateMerchantInventory(String merchantId, List<MerchantItem> merchantItems) {
+        MutableLiveData<Integer> responseLiveData = new MutableLiveData<>();
+
+        MerchantOrderBody body = new MerchantOrderBody();
+
+        Date date = new Date(System.currentTimeMillis());
+        SimpleDateFormat dateF = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+        String created = dateF.format(date);
+
+        body.setCreated(created);
+        body.setMerchantId(merchantId);
+
+        List<OrderItem> orderItems = new ArrayList<>();
+        for (MerchantItem item : merchantItems) {
+            if (item.getOrderQuantity() > 0) {
+                OrderItem newItem = new OrderItem();
+                newItem.setItemId(item.getInventoryItem().getId());
+                newItem.setPrice(item.getInventoryItem().getPrice());
+                newItem.setQuantity(item.getOrderQuantity());
+                orderItems.add(newItem);
+            }
+        }
+        body.setOrderItems(orderItems);
+        
+        Call<ResponseBody> call = backendApi.executeMerchantOrder(createAuthToken(), body);
+        call.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                responseLiveData.postValue(response.code());
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+
+            }
+        });
+
+        return responseLiveData;
+    }
+
+    public String getUserId() {
+        return loginInfo.getUser().getId();
     }
 }

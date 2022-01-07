@@ -10,6 +10,7 @@ import androidx.core.app.NotificationManagerCompat;
 
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
+import com.vladimirjanjanin.orderapp.R;
 
 import java.util.Objects;
 
@@ -36,6 +37,7 @@ public class FirebaseNotificationService extends FirebaseMessagingService {
             Notification.Builder notification = new Notification.Builder(this, CHANNEL_ID)
                     .setContentTitle(title)
                     .setContentText(body)
+                    .setSmallIcon(R.drawable.ic_money)
                     .setAutoCancel(true);
             NotificationManagerCompat.from(this).notify(1, notification.build());
         }

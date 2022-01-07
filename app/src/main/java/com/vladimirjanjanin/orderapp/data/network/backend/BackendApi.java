@@ -6,6 +6,7 @@ import com.vladimirjanjanin.orderapp.data.dtos.MerchantTransactionBody;
 import com.vladimirjanjanin.orderapp.data.dtos.RegisterBody;
 import com.vladimirjanjanin.orderapp.data.dtos.RegisterResponse;
 import com.vladimirjanjanin.orderapp.data.models.MerchantItem;
+import com.vladimirjanjanin.orderapp.data.models.MerchantOrderBody;
 import com.vladimirjanjanin.orderapp.data.models.UpdateFcmTokenBody;
 import com.vladimirjanjanin.orderapp.data.models.User;
 
@@ -48,10 +49,19 @@ public interface BackendApi {
     );
 
     @Headers({"Content-Type: application/json"})
+    @POST("MerchantOrders/ExecuteMerchantOrder")
+    Call<ResponseBody> executeMerchantOrder(
+            @Header("Authorization") String token,
+            @Body MerchantOrderBody body
+    );
+
+    @Headers({"Content-Type: application/json"})
     @POST("FCM/UpdateFcmToken")
     Call<ResponseBody> updateFcmToken(
             @Header("Authorization") String token,
             @Body UpdateFcmTokenBody body
     );
+
+
 
 }

@@ -111,8 +111,13 @@ public class CheckoutActivity extends AppCompatActivity {
         }
 
         body.setTransactionItems(transactionItems);
-
-        viewModel.sendSuccessfulTransaction(body);
+        viewModel.sendSuccessfulTransaction(body).observe(this, v -> {
+            if (v >= 200 && v < 300) {
+                Utils.showSnackbar(findViewById(android.R.id.content).getRootView(), this, true, "Merchant notified!");
+            } else {
+                Utils.showSnackbar(findViewById(android.R.id.content).getRootView(), this, false, "Notifying merchant failed!");
+            }
+        });
 
     }
 

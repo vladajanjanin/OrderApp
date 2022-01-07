@@ -43,7 +43,6 @@ public class QrScanActivity extends AppCompatActivity {
         codeScanner.setDecodeCallback(result -> runOnUiThread(() -> {
             String res = result.getText();
             viewModel.setCurrentMerchantId(res);
-            viewModel.getMerchantItems(res);
             startActivity(new Intent(this, InventoryActivity.class));
         }));
         scannerView.setOnClickListener(v -> codeScanner.startPreview());

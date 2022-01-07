@@ -89,9 +89,9 @@ public class InventorySection extends Section {
         itemHolder.tvItemPrice.setText(context.getString(R.string.price_format, inventoryItem.getPrice()));
 
         if (isMerchant) {
-            itemHolder.tvItemCount.setText(String.valueOf(merchantItem.getQuantity()));
+            itemHolder.tvItemCount.setText(String.valueOf((int)merchantItem.getQuantity()));
         } else {
-            itemHolder.tvItemCount.setText(String.valueOf(merchantItem.getOrderQuantity()));
+            itemHolder.tvItemCount.setText(String.valueOf((int)merchantItem.getOrderQuantity()));
         }
 
         itemHolder.ivItemImage.setOnClickListener(c -> {
@@ -105,20 +105,37 @@ public class InventorySection extends Section {
         });
 
         itemHolder.btnMinus.setOnClickListener(c -> {
-            int itemCount = Integer.parseInt(itemHolder.tvItemCount.getText().toString());
+            int itemCount = items.get(position).getOrderQuantity();
+
             if (itemCount > 0) {
                 itemCount--;
-                itemHolder.tvItemCount.setText(String.valueOf(itemCount));
+                if (isMerchant) {
+                    itemHolder.tvItemCount.setText(String.valueOf((int)items.get(position).getOrderQuantity() + itemCount));
+                } else {
+                    itemHolder.tvItemCount.setText(String.valueOf(itemCount));
+                }
                 items.get(position).setOrderQuantity(itemCount);
             }
+
         });
 
         itemHolder.btnPlus.setOnClickListener(c -> {
-            int itemCount = Integer.parseInt(itemHolder.tvItemCount.getText().toString());
-            if (itemCount < items.get(position).getQuantity()) {
+            int itemCount = items.get(position).getOrderQuantity();
+
+            if (isMerchant) {
+                // Merchant logic
                 itemCount++;
-                itemHolder.tvItemCount.setText(String.valueOf(itemCount));
+                itemHolder.tvItemCount.setText(String.valueOf((int)items.get(position).getQuantity() + itemCount));
                 items.get(position).setOrderQuantity(itemCount);
+            } else {
+                // Customer logic
+                if (itemCount < items.get(position).getQuantity()) {
+                    itemCount++;
+                    itemHolder.tvItemCount.setText(String.valueOf(itemCount));
+                    items.get(position).setOrderQuantity(itemCount);
+                } else {
+                    Utils.showToast(context, "Maximum number of this item.");
+                }
             }
         });
     }

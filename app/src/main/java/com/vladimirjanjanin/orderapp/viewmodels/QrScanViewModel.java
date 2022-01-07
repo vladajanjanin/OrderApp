@@ -15,8 +15,8 @@ public class QrScanViewModel extends AndroidViewModel {
         repo = Repository.getInstance();
     }
 
-    public void getMerchantItems(String id) {
-        repo.getMerchantItems(id);
+    public void refreshInventory(String id) {
+        repo.refreshInventory(id);
     }
 
     public void setCurrentMerchantId(String res) {

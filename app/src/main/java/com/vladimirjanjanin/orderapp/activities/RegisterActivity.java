@@ -22,8 +22,6 @@ import com.vladimirjanjanin.orderapp.data.dtos.RegisterResponse;
 import com.vladimirjanjanin.orderapp.utils.Utils;
 import com.vladimirjanjanin.orderapp.viewmodels.LoginViewModel;
 
-import io.michaelrocks.libphonenumber.android.PhoneNumberUtil;
-
 public class RegisterActivity extends AppCompatActivity {
     private static final int            AC_PHONE = 1;
     private ScrollView                  root;

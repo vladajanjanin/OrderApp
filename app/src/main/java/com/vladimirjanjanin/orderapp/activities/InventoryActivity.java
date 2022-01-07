@@ -5,6 +5,7 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -24,6 +25,7 @@ import com.vladimirjanjanin.orderapp.viewmodels.InventoryViewModel;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 
 import io.github.luizgrp.sectionedrecyclerviewadapter.SectionedRecyclerViewAdapter;
@@ -40,6 +42,8 @@ public class InventoryActivity extends AppCompatActivity {
     private ProgressBar                     progressBar;
     private ImageButton                     btnCheckout;
     private TextView                        tvLogout;
+    private TextView                        tvUpdateQuantity;
+    private SwipeRefreshLayout              swipeRefresh;
 
 
     @Override
@@ -54,6 +58,18 @@ public class InventoryActivity extends AppCompatActivity {
         setupRecyclerView();
         setListeners();
         setObservers();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (isMerchant) {
+            Utils.log("Refresh merch");
+            viewModel.refreshInventory(viewModel.getUserId());
+        } else {
+            Utils.log("Refresh cust");
+            viewModel.refreshInventory(viewModel.getCurrentMerchantId());
+        }
     }
 
     private void setListeners() {
@@ -83,6 +99,27 @@ public class InventoryActivity extends AppCompatActivity {
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);
         });
+
+        tvUpdateQuantity.setOnClickListener(c -> {
+            // TODO Update inventory
+            viewModel.updateMerchantInventory(viewModel.getUserId(), merchantItems).observe(this, r -> {
+                if (r >= 200 && r < 300) {
+                    Utils.showSnackbar(root, this, true, "Successful inventory update!");
+                } else {
+                    Utils.showSnackbar(root, this, false, "Error!");
+                }
+                viewModel.refreshInventory(viewModel.getUserId());
+                Utils.log("Update inventory: " + r);
+            });
+        });
+
+        swipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                swipeRefresh.setRefreshing(false);
+                viewModel.refreshInventory(viewModel.getCurrentMerchantId());
+            }
+        });
     }
 
     private void proceedToCheckout() {
@@ -101,7 +138,8 @@ public class InventoryActivity extends AppCompatActivity {
     private List<MerchantItem> processItems(List<MerchantItem> items) {
         List<MerchantItem> checkoutItems = new ArrayList<>();
         for (MerchantItem item : items) {
-            if (item.getOrderQuantity() != 0) {
+            Utils.log("Quantity: " + item.getQuantity() + " Order quantity: " + item.getOrderQuantity());
+            if (item.getOrderQuantity() > 0) {
                 checkoutItems.add(item);
             }
         }
@@ -114,20 +152,33 @@ public class InventoryActivity extends AppCompatActivity {
         progressBar = findViewById(R.id.progress_bar_inventory);
         btnCheckout = findViewById(R.id.btn_checkout);
         tvLogout = findViewById(R.id.tv_logout);
+        tvUpdateQuantity = findViewById(R.id.tv_update_quantity);
+        swipeRefresh = findViewById(R.id.swipe_refresh);
+
+        if (isMerchant) tvUpdateQuantity.setVisibility(View.VISIBLE);
+        else tvUpdateQuantity.setVisibility(View.GONE);
     }
 
     private void setObservers() {
         viewModel.getInventoryLiveData().observe(this, inventory -> {
+            Utils.log("Got new items!");
             progressBar.setVisibility(View.GONE);
             merchantItems = inventory;
             if (!isMerchant) {
                 // we don't show items with 0 quantity to customers
-                for (MerchantItem item : merchantItems) {
-                    if (item.getQuantity() <= 0) merchantItems.remove(item);
+                Iterator<MerchantItem> iter = merchantItems.iterator();
+
+                while (iter.hasNext()) {
+                    MerchantItem item = iter.next();
+
+                    if (item.getQuantity() <= 0)
+                        iter.remove();
                 }
+
             }
             addSectionsToAdapter(sectionAdapter, createSections(inventory));
             recyclerView.setAdapter(sectionAdapter);
+
         });
     }
 
@@ -141,6 +192,7 @@ public class InventoryActivity extends AppCompatActivity {
     }
 
     private void addSectionsToAdapter(SectionedRecyclerViewAdapter adapter, HashMap<String, List<MerchantItem>> sections) {
+        adapter.removeAllSections();
         for (List<MerchantItem> sectionList : sections.values()) {
             String title = sectionList.get(0).getInventoryItem().getCategory().getName();
             adapter.addSection(new InventorySection(this, title, sectionList, isMerchant, item -> DialogUtils.showItemInfoDialog(this, item)));

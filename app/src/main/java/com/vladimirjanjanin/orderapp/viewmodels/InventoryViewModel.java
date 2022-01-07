@@ -11,6 +11,8 @@ import com.vladimirjanjanin.orderapp.data.models.MerchantItem;
 
 import java.util.List;
 
+import okhttp3.ResponseBody;
+
 public class InventoryViewModel extends AndroidViewModel {
     private Repository repo;
 
@@ -29,5 +31,21 @@ public class InventoryViewModel extends AndroidViewModel {
 
     public boolean isMerchant() {
         return repo.isMerchant();
+    }
+
+    public LiveData<Integer> updateMerchantInventory(String merchantId, List<MerchantItem> merchantItems) {
+        return repo.updateMerchantInventory(merchantId, merchantItems);
+    }
+
+    public String getUserId() {
+        return repo.getUserId();
+    }
+
+    public void refreshInventory(String id) {
+        repo.refreshInventory(id);
+    }
+
+    public String getCurrentMerchantId() {
+        return repo.getCurrentMerchantId();
     }
 }

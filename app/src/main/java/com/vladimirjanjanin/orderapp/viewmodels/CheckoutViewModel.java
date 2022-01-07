@@ -61,7 +61,7 @@ public class CheckoutViewModel extends AndroidViewModel {
         return repo.getCurrentMerchantId();
     }
 
-    public void sendSuccessfulTransaction(MerchantTransactionBody body) {
-        repo.sendSuccessfulTransaction(body);
+    public LiveData<Integer> sendSuccessfulTransaction(MerchantTransactionBody body) {
+        return repo.sendSuccessfulTransaction(body);
     }
 }
