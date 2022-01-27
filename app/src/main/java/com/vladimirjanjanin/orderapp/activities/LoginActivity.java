@@ -39,6 +39,7 @@ import java.util.Arrays;
 
 public class LoginActivity extends AppCompatActivity {
     private static final int        RC_SIGN_IN = 1;
+    private static final String     EMAIL = "email";
     private LoginViewModel          viewModel;
     private EditText                etEmail;
     private EditText                etPassword;
@@ -47,7 +48,7 @@ public class LoginActivity extends AppCompatActivity {
     private SignInButton            btnGoogle;
     private ProgressBar             progressBar;
     private TextView                tvRegister;
-    private static final String     EMAIL = "email";
+    private TextView                tvGuest;
     private GoogleSignInClient      googleSignInClient;
     private CallbackManager         callbackManager;
     private String                  fcmToken = "";
@@ -227,6 +228,8 @@ public class LoginActivity extends AppCompatActivity {
         btnGoogle.setOnClickListener(c -> googleSignIn());
 
         tvRegister.setOnClickListener(c -> startActivity(new Intent(this, RegisterActivity.class)));
+
+        tvGuest.setOnClickListener(c -> startActivity(new Intent(this, QrScanActivity.class)));
     }
 
     private void initViews() {
@@ -235,6 +238,7 @@ public class LoginActivity extends AppCompatActivity {
         btnLogin = findViewById(R.id.btn_login);
         progressBar = findViewById(R.id.progress_bar_login);
         tvRegister = findViewById(R.id.tv_register);
+        tvGuest = findViewById(R.id.tv_continue_as_guest);
         btnFacebook = findViewById(R.id.btn_facebook_login);
         btnGoogle = findViewById(R.id.btn_google_login);
 

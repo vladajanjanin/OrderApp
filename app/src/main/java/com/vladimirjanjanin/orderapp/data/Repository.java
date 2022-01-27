@@ -1,20 +1,15 @@
 package com.vladimirjanjanin.orderapp.data;
 
-import android.provider.Telephony;
-import android.util.Log;
-
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
-import com.google.gson.JsonObject;
 import com.vladimirjanjanin.orderapp.data.dtos.MerchantTransactionBody;
 import com.vladimirjanjanin.orderapp.data.dtos.OzowPaymentRequestBody;
-import com.vladimirjanjanin.orderapp.data.dtos.OzowTransactionResponse;
 import com.vladimirjanjanin.orderapp.data.dtos.RegisterBody;
 import com.vladimirjanjanin.orderapp.data.dtos.RegisterResponse;
+import com.vladimirjanjanin.orderapp.data.models.UpdateCustomItemPriceBody;
 import com.vladimirjanjanin.orderapp.data.models.Identity;
 import com.vladimirjanjanin.orderapp.data.models.MerchantOrderBody;
-import com.vladimirjanjanin.orderapp.data.models.Order;
 import com.vladimirjanjanin.orderapp.data.models.OrderItem;
 import com.vladimirjanjanin.orderapp.data.models.OzowPaymentRequestResponse;
 import com.vladimirjanjanin.orderapp.data.models.OzowTransaction;
@@ -37,8 +32,6 @@ import com.vladimirjanjanin.orderapp.data.models.MerchantItem;
 import com.vladimirjanjanin.orderapp.data.models.LoginInfo;
 import com.vladimirjanjanin.orderapp.data.network.backend.BackendApi;
 import com.vladimirjanjanin.orderapp.data.network.backend.RetrofitClientBackend;
-
-import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -421,5 +414,28 @@ public class Repository {
 
     public String getUserId() {
         return loginInfo.getUser().getId();
+    }
+
+    public LiveData<Integer> setNewCustomItemPrice(String id, double newPrice) {
+
+        UpdateCustomItemPriceBody body = new UpdateCustomItemPriceBody();
+        body.setItemId(id);
+        body.setPrice(newPrice);
+
+        MutableLiveData<Integer> responseLiveData = new MutableLiveData<Integer>();
+        Call<ResponseBody> call = backendApi.setNewCustomItemPrice(createAuthToken(), body);
+        call.enqueue(new Callback<ResponseBody> () {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                Utils.log("Set new price response: " + response.code());
+                responseLiveData.postValue(response.code());
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                Utils.log(t.getMessage());
+            }
+        });
+        return responseLiveData;
     }
 }

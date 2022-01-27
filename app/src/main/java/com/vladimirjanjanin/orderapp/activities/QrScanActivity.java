@@ -13,6 +13,7 @@ import android.os.Bundle;
 import com.budiyev.android.codescanner.CodeScanner;
 import com.budiyev.android.codescanner.CodeScannerView;
 import com.vladimirjanjanin.orderapp.R;
+import com.vladimirjanjanin.orderapp.utils.Utils;
 import com.vladimirjanjanin.orderapp.viewmodels.QrScanViewModel;
 
 public class QrScanActivity extends AppCompatActivity {
@@ -43,6 +44,7 @@ public class QrScanActivity extends AppCompatActivity {
         codeScanner.setDecodeCallback(result -> runOnUiThread(() -> {
             String res = result.getText();
             viewModel.setCurrentMerchantId(res);
+            Utils.log("Current merchant ID: " + res);
             startActivity(new Intent(this, InventoryActivity.class));
         }));
         scannerView.setOnClickListener(v -> codeScanner.startPreview());

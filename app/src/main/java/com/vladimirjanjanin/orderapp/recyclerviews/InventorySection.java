@@ -106,15 +106,19 @@ public class InventorySection extends Section {
 
         itemHolder.btnMinus.setOnClickListener(c -> {
             int itemCount = items.get(position).getOrderQuantity();
+            Utils.log("Item count pre obrade: " + itemCount);
 
             if (itemCount > 0) {
                 itemCount--;
                 if (isMerchant) {
-                    itemHolder.tvItemCount.setText(String.valueOf((int)items.get(position).getOrderQuantity() + itemCount));
+                    Utils.log("Merchant nova vrednost: " + (items.get(position).getQuantity() + itemCount));
+                    itemHolder.tvItemCount.setText(String.valueOf((int)items.get(position).getQuantity() + itemCount));
                 } else {
                     itemHolder.tvItemCount.setText(String.valueOf(itemCount));
                 }
                 items.get(position).setOrderQuantity(itemCount);
+            } else {
+                Utils.log("Item count je 0");
             }
 
         });

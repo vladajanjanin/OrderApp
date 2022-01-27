@@ -53,6 +53,7 @@
     <string name="code">Code</string>
     <string name="verify">VERIFY</string>
     <string name="update_quantity">Update quantity</string>
+    <string name="set_your_custom_price">Set your custom price</string>
 
     <string-array name="DialingCountryCode" >
         <item>32,BE</item>

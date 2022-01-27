@@ -48,4 +48,8 @@ public class InventoryViewModel extends AndroidViewModel {
     public String getCurrentMerchantId() {
         return repo.getCurrentMerchantId();
     }
+
+    public LiveData<Integer> setNewCustomItemPrice(String id, double newPrice) {
+        return repo.setNewCustomItemPrice(id, newPrice);
+    }
 }

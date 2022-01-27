@@ -4,7 +4,7 @@ import com.vladimirjanjanin.orderapp.data.dtos.LoginBody;
 import com.vladimirjanjanin.orderapp.data.dtos.LoginResponse;
 import com.vladimirjanjanin.orderapp.data.dtos.MerchantTransactionBody;
 import com.vladimirjanjanin.orderapp.data.dtos.RegisterBody;
-import com.vladimirjanjanin.orderapp.data.dtos.RegisterResponse;
+import com.vladimirjanjanin.orderapp.data.models.UpdateCustomItemPriceBody;
 import com.vladimirjanjanin.orderapp.data.models.MerchantItem;
 import com.vladimirjanjanin.orderapp.data.models.MerchantOrderBody;
 import com.vladimirjanjanin.orderapp.data.models.UpdateFcmTokenBody;
@@ -12,6 +12,7 @@ import com.vladimirjanjanin.orderapp.data.models.User;
 
 import java.util.List;
 
+import okhttp3.Response;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
@@ -62,6 +63,11 @@ public interface BackendApi {
             @Body UpdateFcmTokenBody body
     );
 
-
+    @Headers({"Content-Type: application/json"})
+    @POST("Inventory/UpdateCustomItemPrice")
+    Call<ResponseBody> setNewCustomItemPrice(
+            @Header("Authorization") String token,
+            @Body UpdateCustomItemPriceBody body
+    );
 
 }

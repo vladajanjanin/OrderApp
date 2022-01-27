@@ -89,6 +89,7 @@
         android:text="@string/update_quantity"
         android:textAlignment="center"
         android:textColor="@color/blue"
+        android:paddingTop="8dp"
         android:textSize="20sp"
         android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
